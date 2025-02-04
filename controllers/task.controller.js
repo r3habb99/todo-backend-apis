@@ -1,6 +1,6 @@
 const logger = require("../utils/logger.util");
 const Task = require("../models/task.model");
-const User = require("../models/user.model");
+const sendResponse = require("../utils/responses.util");
 
 // Create Task
 const createTask = async (req, res) => {
@@ -9,17 +9,28 @@ const createTask = async (req, res) => {
     const { title, description, status, dueDate } = req.body;
 
     if (!title || !description || !dueDate) {
-      return res.status(400).json({ message: "All required fields must be provided" });
+      return sendResponse(
+        res,
+        400,
+        false,
+        "All required fields must be provided"
+      );
     }
 
-    const newTask = new Task({ title, description, status: status || "pending", dueDate, userId });
+    const newTask = new Task({
+      title,
+      description,
+      status: status || "pending",
+      dueDate,
+      userId,
+    });
     await newTask.save();
 
     logger.info("Task created successfully");
-    res.status(201).json({ message: "Task created successfully", newTask });
+    sendResponse(res, 201, true, "Task created successfully", newTask);
   } catch (error) {
     logger.error(error.message);
-    res.status(500).json({ message: error.message });
+    sendResponse(res, 500, false, error.message);
   }
 };
 
@@ -31,18 +42,19 @@ const updateTask = async (req, res) => {
     const { title, description, status } = req.body;
 
     const updatedTask = await Task.findOneAndUpdate(
-      { _id: id, userId }, // Ensure user only updates their own task
+      { _id: id, userId },
       { title, description, status },
       { new: true }
     );
 
-    if (!updatedTask) return res.status(404).json({ message: "Task not found or unauthorized" });
+    if (!updatedTask)
+      return sendResponse(res, 404, false, "Task not found or unauthorized");
 
     logger.info("Task updated successfully");
-    res.status(200).json({ message: "Task updated successfully", updatedTask });
+    sendResponse(res, 200, true, "Task updated successfully", updatedTask);
   } catch (error) {
     logger.error(error.message);
-    res.status(500).json({ message: error.message });
+    sendResponse(res, 500, false, error.message);
   }
 };
 
@@ -53,44 +65,46 @@ const getTasks = async (req, res) => {
     const tasks = await Task.find({ userId });
 
     logger.info("Tasks retrieved successfully");
-    res.status(200).json({ tasks });
+    sendResponse(res, 200, true, "Tasks retrieved successfully", tasks);
   } catch (error) {
     logger.error(error.message);
-    res.status(500).json({ message: error.message });
+    sendResponse(res, 500, false, error.message);
   }
 };
 
-// Get Task By ID (for logged-in user)
+// Get Task By ID
 const getTaskById = async (req, res) => {
   try {
     const userId = req.user.id;
     const { id } = req.params;
     const task = await Task.findOne({ _id: id, userId });
 
-    if (!task) return res.status(404).json({ message: "Task not found or unauthorized" });
+    if (!task)
+      return sendResponse(res, 404, false, "Task not found or unauthorized");
 
     logger.info("Task retrieved successfully");
-    res.status(200).json({ task });
+    sendResponse(res, 200, true, "Task retrieved successfully", task);
   } catch (error) {
     logger.error(error.message);
-    res.status(500).json({ message: error.message });
+    sendResponse(res, 500, false, error.message);
   }
 };
 
-// Delete Task By ID (for logged-in user)
+// Delete Task By ID
 const deleteTaskById = async (req, res) => {
   try {
     const userId = req.user.id;
     const { id } = req.params;
 
     const deletedTask = await Task.findOneAndDelete({ _id: id, userId });
-    if (!deletedTask) return res.status(404).json({ message: "Task not found or unauthorized" });
+    if (!deletedTask)
+      return sendResponse(res, 404, false, "Task not found or unauthorized");
 
     logger.info("Task deleted successfully");
-    res.status(200).json({ message: "Task deleted successfully" });
+    sendResponse(res, 200, true, "Task deleted successfully");
   } catch (error) {
     logger.error(error.message);
-    res.status(500).json({ message: error.message });
+    sendResponse(res, 500, false, error.message);
   }
 };
 
@@ -101,14 +115,14 @@ const deleteTasks = async (req, res) => {
     await Task.deleteMany({ userId });
 
     logger.info("All tasks deleted successfully");
-    res.status(200).json({ message: "All tasks deleted successfully" });
+    sendResponse(res, 200, true, "All tasks deleted successfully");
   } catch (error) {
     logger.error(error.message);
-    res.status(500).json({ message: error.message });
+    sendResponse(res, 500, false, error.message);
   }
 };
 
-// Update Task Status (for logged-in user)
+// Update Task Status
 const taskStatusUpdate = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -116,18 +130,25 @@ const taskStatusUpdate = async (req, res) => {
     const { status } = req.body;
 
     const updatedTask = await Task.findOneAndUpdate(
-      { _id: id, userId }, 
-      { status }, 
+      { _id: id, userId },
+      { status },
       { new: true }
     );
 
-    if (!updatedTask) return res.status(404).json({ message: "Task not found or unauthorized" });
+    if (!updatedTask)
+      return sendResponse(res, 404, false, "Task not found or unauthorized");
 
     logger.info("Task status updated successfully");
-    res.status(200).json({ message: "Task status updated successfully", updatedTask });
+    sendResponse(
+      res,
+      200,
+      true,
+      "Task status updated successfully",
+      updatedTask
+    );
   } catch (error) {
     logger.error(error.message);
-    res.status(500).json({ message: error.message });
+    sendResponse(res, 500, false, error.message);
   }
 };
 
@@ -138,5 +159,5 @@ module.exports = {
   getTaskById,
   deleteTaskById,
   deleteTasks,
-  taskStatusUpdate
+  taskStatusUpdate,
 };
