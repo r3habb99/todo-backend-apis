@@ -1,5 +1,6 @@
 {
     "PORT": "3000",
     "DB_URL": "mongodb: //127.0.0.1:27017/todo-app",
-    "JWT_SECRET": "mySecretwillbehere"
+    "JWT_SECRET": "mySecretwillbehere",
+    "http://localhost:3000/api/v1": "http://localhost:3000/api/v1"
 }
